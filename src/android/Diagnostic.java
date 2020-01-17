@@ -87,6 +87,7 @@ public class Diagnostic extends CordovaPlugin{
         Diagnostic.addBiDirMapEntry(_permissionsMap, "GET_ACCOUNTS", Manifest.permission.GET_ACCOUNTS);
         Diagnostic.addBiDirMapEntry(_permissionsMap, "ACCESS_FINE_LOCATION", Manifest.permission.ACCESS_FINE_LOCATION);
         Diagnostic.addBiDirMapEntry(_permissionsMap, "ACCESS_COARSE_LOCATION", Manifest.permission.ACCESS_COARSE_LOCATION);
+        Diagnostic.addBiDirMapEntry(_permissionsMap, "ACCESS_BACKGROUND_LOCATION", Manifest.permission.ACCESS_BACKGROUND_LOCATION);
         Diagnostic.addBiDirMapEntry(_permissionsMap, "RECORD_AUDIO", Manifest.permission.RECORD_AUDIO);
         Diagnostic.addBiDirMapEntry(_permissionsMap, "READ_PHONE_STATE", Manifest.permission.READ_PHONE_STATE);
         Diagnostic.addBiDirMapEntry(_permissionsMap, "CALL_PHONE", Manifest.permission.CALL_PHONE);
@@ -122,12 +123,12 @@ public class Diagnostic extends CordovaPlugin{
      * User authorised permission
      */
     protected static final String STATUS_GRANTED = "GRANTED";
-
     /**
      * User denied permission (without checking "never ask again")
      */
     protected static final String STATUS_DENIED_ONCE = "DENIED_ONCE";
 
+    protected static final String STATUS_GRANTED_WHEN_IN_USE = "GRANTED_WHEN_IN_USE";
     /**
      * User denied permission and checked "never ask again"
      */
@@ -486,12 +487,22 @@ public class Diagnostic extends CordovaPlugin{
         JSONObject statuses = new JSONObject();
         for(int i=0; i<permissions.length; i++){
             String permission = permissions[i];
+
             if(!permissionsMap.containsKey(permission)){
                 throw new Exception("Permission name '"+permission+"' is not a valid permission");
             }
             String androidPermission = permissionsMap.get(permission);
             Log.v(TAG, "Get authorisation status for "+androidPermission);
             boolean granted = hasPermission(androidPermission);
+
+            // ACCESS_BACKGROUND_LOCATION: Hotfix for API lower than 29
+            if(permission.equals("ACCESS_BACKGROUND_LOCATION") && Build.VERSION.SDK_INT < 29) {
+                if(hasPermission(permissionsMap.get("ACCESS_COARSE_LOCATION")) && hasPermission(permissionsMap.get("ACCESS_FINE_LOCATION"))) 
+                {
+                    granted = true;
+                }
+            }
+
             if(granted){
                 statuses.put(permission, Diagnostic.STATUS_GRANTED);
             }else{

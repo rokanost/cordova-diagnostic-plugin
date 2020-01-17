@@ -41,6 +41,7 @@ var Diagnostic_Location = (function(){
     function combineLocationStatuses(statuses){
         var coarseStatus = statuses[Diagnostic.permission.ACCESS_COARSE_LOCATION],
             fineStatus = statuses[Diagnostic.permission.ACCESS_FINE_LOCATION],
+            bgStatus = statuses[Diagnostic.permission.ACCESS_BACKGROUND_LOCATION],
             status;
 
         if(coarseStatus === Diagnostic.permissionStatus.DENIED_ALWAYS || fineStatus === Diagnostic.permissionStatus.DENIED_ALWAYS){
@@ -49,7 +50,9 @@ var Diagnostic_Location = (function(){
             status = Diagnostic.permissionStatus.DENIED_ONCE;
         }else if(coarseStatus === Diagnostic.permissionStatus.NOT_REQUESTED || fineStatus === Diagnostic.permissionStatus.NOT_REQUESTED){
             status = Diagnostic.permissionStatus.NOT_REQUESTED;
-        }else{
+        }else if(bgStatus !== Diagnostic.permissionStatus.GRANTED) {
+            status = bgStatus;
+        } else {
             status = Diagnostic.permissionStatus.GRANTED;
         }
         return status;
@@ -218,7 +221,8 @@ var Diagnostic_Location = (function(){
         }
         Diagnostic.requestRuntimePermissions(onSuccess, errorCallback, [
             Diagnostic.permission.ACCESS_COARSE_LOCATION,
-            Diagnostic.permission.ACCESS_FINE_LOCATION
+            Diagnostic.permission.ACCESS_FINE_LOCATION,
+            Diagnostic.permission.ACCESS_BACKGROUND_LOCATION
         ]);
     };
 
@@ -231,11 +235,13 @@ var Diagnostic_Location = (function(){
      */
     Diagnostic_Location.getLocationAuthorizationStatus = function(successCallback, errorCallback){
         function onSuccess(statuses){
+            console.log(statuses);
             successCallback(combineLocationStatuses(statuses));
         }
         Diagnostic.getPermissionsAuthorizationStatus(onSuccess, errorCallback, [
             Diagnostic.permission.ACCESS_COARSE_LOCATION,
-            Diagnostic.permission.ACCESS_FINE_LOCATION
+            Diagnostic.permission.ACCESS_FINE_LOCATION,
+            Diagnostic.permission.ACCESS_BACKGROUND_LOCATION
         ]);
     };
 
